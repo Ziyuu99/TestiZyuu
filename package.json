@@ -1,0 +1,7 @@
+{
+  "name": "bot-testimoni",
+  "dependencies": {
+    "node-telegram-bot-api": "^0.65.0",
+    "@supabase/supabase-js": "^2.39.0"
+  }
+}
