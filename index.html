@@ -1,32 +1,75 @@
 <!DOCTYPE html>
-<html>
-<body>
-  <h2>Galeri Testimoni</h2>
-  <div id="container">Loading...</div>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Testimoni Pelanggan</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 min-h-screen">
+
+  <nav class="bg-white shadow-sm p-4 text-center">
+    <h1 class="text-xl font-bold text-slate-800">Galeri Testimoni</h1>
+  </nav>
+
+  <div class="max-w-md mx-auto p-4 space-y-6" id="container">
+    <p class="text-center text-slate-500">Memuat testimoni...</p>
+  </div>
+
   <script>
     async function load() {
       const res = await fetch('/api/data');
       const data = await res.json();
-      document.getElementById('container').innerHTML = data.map(item => `
-        <div style="border:1px solid #ccc; padding:10px; margin:10px;">
-          <img src="${item.photo_url}" width="200"><br>
-          ${item.rating ? `⭐ ${item.rating} - ${item.kritsar}` : 
-          `<input id="r-${item.id}" type="number" placeholder="Rating 1-5">
-           <input id="k-${item.id}" placeholder="Kritik Saran">
-           <button onclick="kirim('${item.id}')">Kirim</button>`}
-          <br><button onclick="hapus('${item.id}')">Hapus (Admin)</button>
-        </div>`).join('');
+      const container = document.getElementById('container');
+      
+      if(data.length === 0) {
+        container.innerHTML = '<p class="text-center">Belum ada testimoni.</p>';
+        return;
+      }
+
+      container.innerHTML = data.map(item => `
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+          <img src="${item.photo_url}" class="w-full h-72 object-cover">
+          <div class="p-5">
+            ${item.rating ? 
+              `<div class="flex text-yellow-400 mb-2">
+                 ${'★'.repeat(item.rating)}${'☆'.repeat(5-item.rating)}
+               </div>
+               <p class="text-slate-700 italic">"${item.kritsar}"</p>` : 
+              `<div class="space-y-3">
+                 <input id="r-${item.id}" type="number" min="1" max="5" class="w-full border rounded-lg p-2" placeholder="Rating (1-5)">
+                 <textarea id="k-${item.id}" class="w-full border rounded-lg p-2" placeholder="Kritik & Saran"></textarea>
+                 <button onclick="kirim('${item.id}')" class="w-full bg-slate-900 text-white font-bold py-2 rounded-lg hover:bg-slate-800 transition">Kirim Ulasan</button>
+               </div>`
+            }
+            <button onclick="hapus('${item.id}')" class="w-full text-slate-400 text-[10px] mt-4 hover:text-red-500 uppercase tracking-widest">Hapus (Admin)</button>
+          </div>
+        </div>
+      `).join('');
     }
+
     async function kirim(id) {
-      await fetch('/api/data', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({id, rating: document.getElementById('r-'+id).value, kritsar: document.getElementById('k-'+id).value})});
+      const rating = document.getElementById('r-'+id).value;
+      const kritsar = document.getElementById('k-'+id).value;
+      await fetch('/api/data', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({id, rating, kritsar})
+      });
       load();
     }
+
     async function hapus(id) {
-      const p = prompt('Password?');
-      await fetch('/api/data', {method:'DELETE', headers:{'Content-Type':'application/json'}, body: JSON.stringify({id, password: p})});
+      const password = prompt('Password Admin:');
+      if(!password) return;
+      await fetch('/api/data', {
+        method: 'DELETE',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({id, password})
+      });
       load();
     }
     load();
   </script>
 </body>
-</html>
+  </html>
