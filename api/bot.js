@@ -10,25 +10,34 @@ export default async function handler(req, res) {
     if (msg && msg.photo) {
       const chatId = msg.chat.id;
       try {
+        // Ambil ID foto kualitas tertinggi
         const photoId = msg.photo[msg.photo.length - 1].file_id;
         const fileLink = await bot.getFileLink(photoId);
         
+        // Download foto
         const response = await fetch(fileLink);
         const arrayBuffer = await response.arrayBuffer();
         const buffer = Buffer.from(arrayBuffer);
         const fileName = `foto_${Date.now()}.jpg`;
         
-        await supabase.storage.from('testimoni_photos').upload(fileName, buffer, { contentType: 'image/jpeg' });
+        // Upload ke Supabase Storage
+        const { error: uploadError } = await supabase.storage.from('testimoni_photos').upload(fileName, buffer, { contentType: 'image/jpeg' });
+        
+        if (uploadError) throw uploadError;
+
+        // Ambil Link Publik dengan cara yang benar
         const { data } = supabase.storage.from('testimoni_photos').getPublicUrl(fileName);
+        
+        // Simpan ke Tabel Testimoni
         await supabase.from('Testimoni').insert([{ photo_url: data.publicUrl }]);
         
         bot.sendMessage(chatId, "Foto berhasil masuk ke website!");
       } catch (err) {
-        bot.sendMessage(chatId, "Gagal memproses foto.");
+        bot.sendMessage(chatId, "Gagal: " + err.message);
       }
     }
     res.status(200).send('OK');
   } else {
     res.status(200).send('Bot aktif');
   }
-          }
+    }
