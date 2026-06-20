@@ -19,7 +19,7 @@
       <h2 class="text-lg font-bold mb-4 text-slate-800">Tulis Testimoni Anda</h2>
       <div class="space-y-4">
         <input id="input-nama" type="text" class="w-full bg-slate-50 border-0 rounded-xl p-3 focus:ring-2 focus:ring-blue-500" placeholder="Nama Anda">
-        <input id="input-rating" type="number" min="1" max="5" class="w-full bg-slate-50 border-0 rounded-xl p-3 focus:ring-2 focus:ring-blue-500" placeholder="Rating (1-5)">
+        <input id="input-rating" type="number" min="1" class="w-full bg-slate-50 border-0 rounded-xl p-3 focus:ring-2 focus:ring-blue-500" placeholder="Berikan Nilai (contoh: 10, 100, 1000)">
         <textarea id="input-kritsar" class="w-full bg-slate-50 border-0 rounded-xl p-3 focus:ring-2 focus:ring-blue-500" rows="3" placeholder="Apa pendapat Anda?"></textarea>
         <button onclick="kirimBaru()" class="w-full bg-slate-900 text-white font-bold py-3 rounded-xl hover:bg-slate-800 transition">Kirim Testimoni</button>
       </div>
@@ -40,13 +40,15 @@
   <script>
     async function kirimBaru() {
       const nama = document.getElementById('input-nama').value;
-      const rating = parseInt(document.getElementById('input-rating').value); // Memastikan angka
+      const rating = parseInt(document.getElementById('input-rating').value);
       const kritsar = document.getElementById('input-kritsar').value;
 
       if (!nama || !rating || !kritsar) {
         alert("Mohon isi semua kolom!");
         return;
       }
+
+      // Kunci if (rating > 10) SUDAH SAYA HAPUS DI SINI
 
       try {
         const res = await fetch('/api/data', {
@@ -55,13 +57,12 @@
           body: JSON.stringify({ nama, rating, kritsar })
         });
 
-        const data = await res.json(); // Ambil detail error dari server
+        const data = await res.json(); 
 
         if (res.ok) {
           alert("Testimoni berhasil dikirim!");
           location.reload(); 
         } else {
-          // INI YANG BERUBAH: Menampilkan error langsung dari Supabase
           alert("Gagal! Alasan dari database: " + (data.error || "Tidak diketahui"));
         }
       } catch (err) {
@@ -76,7 +77,9 @@
         <div class="bg-white rounded-3xl p-5 shadow-sm border border-slate-100">
           <p class="font-bold text-slate-900">👤 ${item.nama_pembeli || 'Pelanggan'}</p>
           ${item.photo_url ? `<img src="${item.photo_url}" class="w-full h-72 object-cover rounded-2xl my-4">` : ''}
-          ${item.rating ? `<div class="text-yellow-500 font-bold mt-2">⭐ ${item.rating} / 5</div>` : ''}
+          
+          ${item.rating ? `<div class="text-yellow-500 font-bold mt-2">⭐ ${item.rating} / 10</div>` : ''}
+          
           <p class="text-slate-600 italic mt-2">"${item.kritsar || ''}"</p>
           ${item.balasan_admin ? `<div class="mt-3 p-3 bg-slate-50 rounded-xl text-sm border-l-4 border-blue-500"><strong>Admin:</strong> ${item.balasan_admin}</div>` : ''}
         </div>
