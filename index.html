@@ -40,7 +40,7 @@
   <script>
     async function kirimBaru() {
       const nama = document.getElementById('input-nama').value;
-      const rating = document.getElementById('input-rating').value;
+      const rating = parseInt(document.getElementById('input-rating').value); // Memastikan angka
       const kritsar = document.getElementById('input-kritsar').value;
 
       if (!nama || !rating || !kritsar) {
@@ -48,17 +48,24 @@
         return;
       }
 
-      const res = await fetch('/api/data', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ nama, rating, kritsar })
-      });
+      try {
+        const res = await fetch('/api/data', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ nama, rating, kritsar })
+        });
 
-      if (res.ok) {
-        alert("Testimoni berhasil dikirim!");
-        location.reload(); 
-      } else {
-        alert("Gagal mengirim, pastikan database siap.");
+        const data = await res.json(); // Ambil detail error dari server
+
+        if (res.ok) {
+          alert("Testimoni berhasil dikirim!");
+          location.reload(); 
+        } else {
+          // INI YANG BERUBAH: Menampilkan error langsung dari Supabase
+          alert("Gagal! Alasan dari database: " + (data.error || "Tidak diketahui"));
+        }
+      } catch (err) {
+        alert("Sistem error: " + err.message);
       }
     }
 
@@ -68,12 +75,9 @@
       document.getElementById('container').innerHTML = data.map(item => `
         <div class="bg-white rounded-3xl p-5 shadow-sm border border-slate-100">
           <p class="font-bold text-slate-900">👤 ${item.nama_pembeli || 'Pelanggan'}</p>
-          
           ${item.photo_url ? `<img src="${item.photo_url}" class="w-full h-72 object-cover rounded-2xl my-4">` : ''}
-          
           ${item.rating ? `<div class="text-yellow-500 font-bold mt-2">⭐ ${item.rating} / 5</div>` : ''}
           <p class="text-slate-600 italic mt-2">"${item.kritsar || ''}"</p>
-          
           ${item.balasan_admin ? `<div class="mt-3 p-3 bg-slate-50 rounded-xl text-sm border-l-4 border-blue-500"><strong>Admin:</strong> ${item.balasan_admin}</div>` : ''}
         </div>
       `).join('');
@@ -81,4 +85,4 @@
     load();
   </script>
 </body>
-  </html>
+</html>
