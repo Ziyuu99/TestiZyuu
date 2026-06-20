@@ -6,13 +6,11 @@ export default async function handler(req, res) {
     const { data } = await supabase.from('Testimoni').select('*').order('created_at', { ascending: false });
     return res.status(200).json(data || []);
   }
-  
   if (req.method === 'POST') {
     const { id, rating, kritsar } = req.body;
     await supabase.from('Testimoni').update({ rating, kritsar }).eq('id', id);
     return res.status(200).json({ success: true });
   }
-  
   if (req.method === 'DELETE') {
     const { id, password } = req.body;
     if (password !== process.env.ADMIN_PASSWORD) return res.status(401).json({ error: 'Salah' });
