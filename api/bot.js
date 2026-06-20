@@ -16,16 +16,23 @@ export default async function handler(req, res) {
         const buffer = await response.arrayBuffer();
         const fileName = `foto_${Date.now()}.jpg`;
         
+        // 1. Menangkap teks dari caption Telegram (jika kosong, tidak error)
+        const teksCaption = msg.caption || "";
+        
         // Menggunakan bucket 'Testimoni_photos'
         const { error: uploadError } = await supabase.storage.from('Testimoni_photos').upload(fileName, Buffer.from(buffer), { contentType: 'image/jpeg' });
         if (uploadError) throw uploadError;
 
         const { data } = supabase.storage.from('Testimoni_photos').getPublicUrl(fileName);
         
-        // Menggunakan tabel 'Testimoni'
-        await supabase.from('Testimoni').insert([{ photo_url: data.publicUrl }]);
+        // 2. Memasukkan foto DAN caption ke dalam database
+        await supabase.from('Testimoni').insert([{ 
+          photo_url: data.publicUrl,
+          kritsar: teksCaption,               // Teks 'love' akan masuk ke sini
+          nama_pembeli: 'Admin ZirenéStore'   // Label resmi agar terlihat profesional
+        }]);
         
-        bot.sendMessage(chatId, "Foto berhasil masuk ke website!");
+        bot.sendMessage(chatId, "Foto beserta caption berhasil masuk ke website!");
       } catch (err) {
         bot.sendMessage(chatId, "Gagal: " + err.message);
       }
