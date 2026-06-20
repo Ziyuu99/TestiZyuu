@@ -34,10 +34,34 @@
 
   <footer class="text-center pt-10 border-t mt-10">
     <p class="text-slate-400 text-sm">Store Official</p>
-    <p class="font-bold text-slate-600 text-lg">@ZirenéStore</p>
+    <p class="font-bold text-slate-600 text-lg">
+      @ZirenéStore 
+      <span onclick="loginAdmin()" class="cursor-pointer ml-1 text-slate-300 hover:text-slate-500">🔒</span>
+    </p>
   </footer>
 
   <script>
+    // Mengambil sandi dari ingatan HP kamu (jika sudah pernah login)
+    let savedPassword = localStorage.getItem('adminPass') || '';
+
+    // FUNGSI UNTUK MENGAKTIFKAN MODE ADMIN
+    function loginAdmin() {
+      if (savedPassword) {
+        const keluar = confirm("Anda sedang dalam Mode Admin. Ingin keluar dan sembunyikan tombol?");
+        if (keluar) {
+          localStorage.removeItem('adminPass');
+          location.reload();
+        }
+        return;
+      }
+      
+      const pass = prompt("Masukkan Sandi Admin untuk memunculkan tombol:");
+      if (pass) {
+        localStorage.setItem('adminPass', pass);
+        location.reload();
+      }
+    }
+
     async function kirimBaru() {
       const nama = document.getElementById('input-nama').value;
       const rating = parseInt(document.getElementById('input-rating').value);
@@ -63,43 +87,43 @@
       } catch (err) { alert("Error: " + err.message); }
     }
 
-    // FUNGSI ADMIN: HAPUS (Otomatis pakai sandi)
     async function hapus(id) {
-      const yakin = confirm("Yakin ingin menghapus testimoni ini secara permanen?");
-      if (!yakin) return; // Batal hapus jika kepencet doang
-
-      const password = "Leipeng99"; // Sandi sudah tertanam di sini
+      const yakin = confirm("Yakin ingin menghapus testimoni ini?");
+      if (!yakin) return;
 
       const res = await fetch('/api/data', {
         method: 'DELETE',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ id, password })
+        body: JSON.stringify({ id, password: savedPassword }) // Pakai sandi yang tersimpan di HP
       });
+      
       if (res.ok) {
-        alert("Komentar berhasil dihapus!");
+        alert("Berhasil dihapus!");
         location.reload();
       } else {
-        alert("Gagal menghapus! Cek kecocokan password di Vercel.");
+        alert("Gagal menghapus! Sandi salah.");
+        localStorage.removeItem('adminPass'); // Reset sandi jika ternyata salah
+        location.reload();
       }
     }
 
-    // FUNGSI ADMIN: BALAS (Otomatis pakai sandi)
     async function balas(id) {
-      const balasan = prompt("Ketik balasan Anda untuk testimoni ini:");
+      const balasan = prompt("Ketik balasan Anda:");
       if (!balasan) return;
-      
-      const password = "Leipeng99"; // Sandi sudah tertanam di sini
 
       const res = await fetch('/api/data', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ id, balasan, password })
+        body: JSON.stringify({ id, balasan, password: savedPassword }) // Pakai sandi yang tersimpan di HP
       });
+      
       if (res.ok) {
         alert("Balasan terkirim!");
         location.reload();
       } else {
-        alert("Gagal membalas! Cek kecocokan password di Vercel.");
+        alert("Gagal membalas! Sandi salah.");
+        localStorage.removeItem('adminPass');
+        location.reload();
       }
     }
 
@@ -115,10 +139,12 @@
           
           ${item.balasan_admin ? `<div class="mt-3 p-3 bg-slate-50 rounded-xl text-sm border-l-4 border-blue-500"><strong>Admin:</strong> ${item.balasan_admin}</div>` : ''}
           
+          ${savedPassword ? `
           <div class="mt-4 flex gap-3 border-t pt-3">
             <button onclick="balas('${item.id}')" class="text-xs font-bold text-blue-500 hover:text-blue-700 uppercase tracking-wider">Balas</button>
             <button onclick="hapus('${item.id}')" class="text-xs font-bold text-red-500 hover:text-red-700 uppercase tracking-wider">Hapus</button>
           </div>
+          ` : ''}
         </div>
       `).join('');
     }
